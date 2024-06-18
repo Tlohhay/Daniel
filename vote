@@ -1,0 +1,53 @@
+import streamlit as st
+import pandas as pd
+import json
+
+# File path to store votes
+VOTES_FILE = "votes.json"
+
+# Load votes from file
+def load_votes():
+    try:
+        with open(VOTES_FILE, "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {'Option 1': 0, 'Option 2': 0, 'Option 3': 0}
+
+# Save votes to file
+def save_votes(votes):
+    with open(VOTES_FILE, "w") as file:
+        json.dump(votes, file)
+
+votes = load_votes()
+
+# Function to update the votes
+def update_votes(option):
+    if option in votes:
+        votes[option] += 1
+        save_votes(votes)
+
+# Streamlit UI
+st.title("Voting Application")
+
+# Input age and check eligibility
+age = st.number_input("Enter your age:", min_value=0, max_value=120, step=1, value=18)
+
+if age < 18:
+    st.warning("You are not eligible to vote. Minimum age is 18.")
+else:
+    st.success("You are eligible to vote!")
+
+    # Input options for voting if eligible
+    option = st.selectbox("Choose an option to vote for:", list(votes.keys()))
+
+    if st.button("Vote"):
+        update_votes(option)
+        st.success(f"You voted for {option}")
+
+# Display the vote counts
+st.subheader("Current Vote Counts")
+vote_df = pd.DataFrame(list(votes.items()), columns=["Option", "Votes"])
+st.bar_chart(vote_df.set_index("Option"))
+
+# Display the current vote counts as text
+st.table(vote_df)
